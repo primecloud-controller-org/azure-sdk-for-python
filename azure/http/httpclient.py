@@ -171,6 +171,8 @@ class _HTTPClient(object):
 
     def send_request_body(self, connection, request_body):
         if request_body:
+            print "REQUEST:"
+            print request_body
             assert isinstance(request_body, bytes)
             connection.send(request_body)
         elif (not isinstance(connection, HTTPSConnection) and

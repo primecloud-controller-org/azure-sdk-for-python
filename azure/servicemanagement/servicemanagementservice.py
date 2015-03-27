@@ -459,9 +459,9 @@ class ServiceManagementService(_ServiceManagementClient):
         _validate_not_none('service_name', service_name)
         _validate_not_none('deployment_name', deployment_name)
         return self._perform_delete(
-            self._get_deployment_path_using_name(
+            self._get_deployment_path_using_name_comp(
                 service_name, deployment_name),
-            async=True)
+            async=True, x_ms_version='2013-10-01')
 
     def swap_deployment(self, service_name, production, source_deployment):
         '''
@@ -1076,7 +1076,7 @@ class ServiceManagementService(_ServiceManagementClient):
                 data_virtual_hard_disks,
                 role_size,
                 virtual_network_name),
-            async=True)
+            async=True, x_ms_version='2013-10-01')
 
     def add_role(self, service_name, deployment_name, role_name, system_config,
                  os_virtual_hard_disk, network_config=None,
@@ -1136,7 +1136,7 @@ class ServiceManagementService(_ServiceManagementClient):
                 availability_set_name,
                 data_virtual_hard_disks,
                 role_size),
-            async=True)
+            async=True, x_ms_version='2013-10-01')
 
     def update_role(self, service_name, deployment_name, role_name,
                     os_virtual_hard_disk=None, network_config=None,
@@ -1203,8 +1203,8 @@ class ServiceManagementService(_ServiceManagementClient):
         _validate_not_none('deployment_name', deployment_name)
         _validate_not_none('role_name', role_name)
         return self._perform_delete(
-            self._get_role_path(service_name, deployment_name, role_name),
-            async=True)
+            self._get_role_path_comp(service_name, deployment_name, role_name),
+            async=True, x_ms_version='2013-10-01')
 
     def capture_role(self, service_name, deployment_name, role_name,
                      post_capture_action, target_image_name,
@@ -1258,7 +1258,7 @@ class ServiceManagementService(_ServiceManagementClient):
             self._get_role_instance_operations_path(
                 service_name, deployment_name, role_name),
             _XmlSerializer.start_role_operation_to_xml(),
-            async=True)
+            async=True, x_ms_version='2012-03-01')
 
     def start_roles(self, service_name, deployment_name, role_names):
         '''
@@ -1697,7 +1697,7 @@ class ServiceManagementService(_ServiceManagementClient):
         path = self._get_disk_path(disk_name)
         if delete_vhd:
             path += '?comp=media'
-        return self._perform_delete(path)
+        return self._perform_delete(path, async=True)
 
     #--Operations for virtual networks  ------------------------------
     def list_virtual_network_sites(self):
@@ -1725,10 +1725,20 @@ class ServiceManagementService(_ServiceManagementClient):
         return self._get_path('services/hostedservices/' + _str(service_name) +
                               '/deployments', deployment_name)
 
+    def _get_deployment_path_using_name_comp(self, service_name,
+                                             deployment_name=None):
+        return self._get_path('services/hostedservices/' + _str(service_name) +
+                              '/deployments', deployment_name + '?comp=media')
+
     def _get_role_path(self, service_name, deployment_name, role_name=None):
         return self._get_path('services/hostedservices/' + _str(service_name) +
                               '/deployments/' + deployment_name +
                               '/roles', role_name)
+
+    def _get_role_path_comp(self, service_name, deployment_name, role_name=None):
+        return self._get_path('services/hostedservices/' + _str(service_name) +
+                              '/deployments/' + deployment_name +
+                              '/roles', role_name + '?comp=media')
 
     def _get_role_instance_operations_path(self, service_name, deployment_name,
                                            role_name=None):

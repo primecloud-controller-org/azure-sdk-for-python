@@ -692,7 +692,7 @@ class WindowsConfigurationSet(WindowsAzureData):
     def __init__(self, computer_name=None, admin_password=None,
                  reset_password_on_first_logon=None,
                  enable_automatic_updates=None, time_zone=None,
-                 admin_username=None):
+                 admin_username=None, custom_data=None):
         self.configuration_set_type = u'WindowsProvisioningConfiguration'
         self.computer_name = computer_name
         self.admin_password = admin_password
@@ -702,6 +702,7 @@ class WindowsConfigurationSet(WindowsAzureData):
         self.time_zone = time_zone
         self.domain_join = DomainJoin()
         self.stored_certificate_settings = StoredCertificateSettings()
+        self.custom_data = custom_data
         self.win_rm = WinRM()
 
 
@@ -806,7 +807,7 @@ class Listener(WindowsAzureData):
 class LinuxConfigurationSet(WindowsAzureData):
 
     def __init__(self, host_name=None, user_name=None, user_password=None,
-                 disable_ssh_password_authentication=None):
+                 disable_ssh_password_authentication=None, custom_data=None):
         self.configuration_set_type = u'LinuxProvisioningConfiguration'
         self.host_name = host_name
         self.user_name = user_name
@@ -814,6 +815,7 @@ class LinuxConfigurationSet(WindowsAzureData):
         self.disable_ssh_password_authentication =\
             disable_ssh_password_authentication
         self.ssh = SSH()
+        self.custom_data = custom_data
 
 
 class SSH(WindowsAzureData):
@@ -941,14 +943,19 @@ class ServiceBusNamespace(WindowsAzureData):
         self.enabled = False
 
 
-def _update_management_header(request):
+def _update_management_header(request, x_ms_version=None):
     ''' Add additional headers for management. '''
+
+    if x_ms_version is not None:
+        pass
+    else:
+        x_ms_version = X_MS_VERSION
 
     if request.method in ['PUT', 'POST', 'MERGE', 'DELETE']:
         request.headers.append(('Content-Length', str(len(request.body))))
 
     # append additional headers base on the service
-    request.headers.append(('x-ms-version', X_MS_VERSION))
+    request.headers.append(('x-ms-version', x_ms_version))
 
     # if it is not GET or HEAD request, must set content-type.
     if not request.method in ['GET', 'HEAD']:
@@ -1216,6 +1223,7 @@ class _XmlSerializer(object):
             [('ConfigurationSetType', configuration.configuration_set_type),
              ('ComputerName', configuration.computer_name),
              ('AdminPassword', configuration.admin_password),
+             ('AdminUsername', configuration.admin_username),
              ('ResetPasswordOnFirstLogon',
               configuration.reset_password_on_first_logon,
               _lower),
@@ -1256,6 +1264,10 @@ class _XmlSerializer(object):
                      ('CertificateThumbprint', listener.certificate_thumbprint)])
                 xml += '</Listener>'
             xml += '</Listeners></WinRM>'
+        if configuration.custom_data is not None:
+            xml += '<CustomData>'
+            xml += configuration.custom_data
+            xml += '</CustomData>'
         xml += _XmlSerializer.data_to_xml(
             [('AdminUsername', configuration.admin_username)])
         return xml
@@ -1290,6 +1302,11 @@ class _XmlSerializer(object):
                 xml += '</KeyPair>'
             xml += '</KeyPairs>'
             xml += '</SSH>'
+        
+        if configuration.custom_data is not None:
+            xml += '<CustomData>'
+            xml += configuration.custom_data
+            xml += '</CustomData>'
         return xml
 
     @staticmethod
