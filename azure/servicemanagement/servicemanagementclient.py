@@ -127,14 +127,14 @@ class _ServiceManagementClient(object):
 
         return None
 
-    def _perform_post(self, path, body, response_type=None, async=False):
+    def _perform_post(self, path, body, response_type=None, async=False, x_ms_version=None):
         request = HTTPRequest()
         request.method = 'POST'
         request.host = self.host
         request.path = path
         request.body = _get_request_body(body)
         request.path, request.query = _update_request_uri_query(request)
-        request.headers = _update_management_header(request)
+        request.headers = _update_management_header(request, x_ms_version)
         response = self._perform_request(request)
 
         if response_type is not None:
@@ -145,13 +145,13 @@ class _ServiceManagementClient(object):
 
         return None
 
-    def _perform_delete(self, path, async=False):
+    def _perform_delete(self, path, async=False, x_ms_version=None):
         request = HTTPRequest()
         request.method = 'DELETE'
         request.host = self.host
         request.path = path
         request.path, request.query = _update_request_uri_query(request)
-        request.headers = _update_management_header(request)
+        request.headers = _update_management_header(request, x_ms_version)
         response = self._perform_request(request)
 
         if async:
